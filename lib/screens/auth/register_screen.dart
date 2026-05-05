@@ -217,47 +217,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Google Login Button
-                  SizedBox(
-                    height: 52,
-                    child: OutlinedButton.icon(
-                      onPressed: authState.isLoading
-                          ? null
-                          : () async {
-                              final success = await ref
-                                  .read(authNotifierProvider.notifier)
-                                  .signInWithGoogle();
-
-                              if (success && context.mounted) {
-                                context.go('/home');
-                              } else if (context.mounted) {
-                                final error = ref.read(authNotifierProvider).errorMessage;
-                                if (error != null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(error)),
-                                  );
-                                }
-                              }
-                            },
-                      icon: Image.asset(
-                        'assets/google_logo.png', // Fallback to an icon if image is missing
-                        height: 24,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.g_mobiledata, size: 28),
-                      ),
-                      label: const Text('Continue with Google',
-                          style: TextStyle(fontSize: 16)),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                            color: theme.colorScheme.outline.withOpacity(0.5)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
                   // Login link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

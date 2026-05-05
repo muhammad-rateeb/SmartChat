@@ -9,6 +9,7 @@ import '../chat/chat_list_screen.dart';
 import '../ai/ai_chat_screen.dart';
 import '../profile/profile_screen.dart';
 import '../../providers/chat_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -29,12 +30,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the chatRoomsProvider to get the total number of chats
+    // Watch the chatRoomsProvider and current userId to get the total number of unread chats
+    final currentUserId = ref.watch(currentUserIdProvider);
     final chatRoomsAsync = ref.watch(chatRoomsProvider);
-    final int chatCount = chatRoomsAsync.when(
-      data: (rooms) => rooms.length,
+    
+    final int unreadChatCount = chatRoomsAsync.when(
+      data: (rooms) {
+        if (currentUserId == null) return 0;
+        
+        int unreadCount = 0;
+        for (final room in rooms) {
+          final countForUser = room.unreadCount[currentUserId] ?? 0;
+          if (countForUser > 0) {
+            unreadCount++;
+          }
+        }
+        return unreadCount;
+      },
       loading: () => 0,
-      error: (_, __) => 0,
+      error: (e, s) => 0,
     );
 
     return Scaffold(
@@ -49,13 +63,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         destinations: [
           NavigationDestination(
             icon: Badge(
-              isLabelVisible: chatCount > 0,
-              label: Text(chatCount.toString()),
+              isLabelVisible: unreadChatCount > 0,
+              label: Text(unreadChatCount.toString()),
               child: const Icon(Icons.chat_bubble_outline),
             ),
             selectedIcon: Badge(
-              isLabelVisible: chatCount > 0,
-              label: Text(chatCount.toString()),
+              isLabelVisible: unreadChatCount > 0,
+              label: Text(unreadChatCount.toString()),
               child: const Icon(Icons.chat_bubble),
             ),
             label: 'Chats',

@@ -1,17 +1,47 @@
-# flutter_application_1
+﻿# SmartChat 🚀
 
-A new Flutter project.
+![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white) 
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Gemini AI](https://img.shields.io/badge/Gemini_AI-4F86F7?style=for-the-badge&logo=google&logoColor=white)
 
-## Getting Started
+**SmartChat** is a cross-platform chat application built with Flutter, heavily focused on integrating real-time messaging with artificial intelligence.
 
-This project is a starting point for a Flutter application.
+## ✨ Features
 
-A few resources to get you started if this is your first Flutter project:
+- **User Authentication:** Secure Sign Up, Log In, and Google Sign-in integrated directly with Firebase Authentication.
+- **Real-Time Chat:** Live chat features powered by Firebase Cloud Firestore.
+- **AI Assistant:** Direct integration with Google Gemini AI. Chat with an intelligent assistant to answer questions, brainstorm, or just chat!
+- **Sleek UI/UX:** A modern, beautiful, and responsive interface matching the best design patterns in mobile apps.
+- **Cross-Platform:** Runs flawlessly on Android, iOS, and the Web.
+- **State Management:** Fully optimized data flows using Riverpod.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## 🛠️ Tech Stack
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **Framework:** Flutter / Dart
+- **Backend:** Firebase (Auth, Firestore)
+- **AI API:** Google Generative AI (Gemini v1.beta)
+- **State Management:** Riverpod
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Install [Flutter SDK](https://docs.flutter.dev/get-started/install)
+- Add Firebase to your Flutter app (`firebase_core`, `firebase_auth`, `cloud_firestore`)
+
+### Setup Instructions
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/muhammad-rateeb/SmartChat.git
+   cd SmartChat
+   ```
+2. **Install dependencies:**
+   ```bash
+   flutter pub get
+   ```
+3. **Connect to Firebase:**
+   Ensure `google-services.json` (for Android) and `GoogleService-Info.plist` (for iOS) are located in their respective folders.
+
+4. **Run the App:**
+   ```bash
+   flutter run
+   ```

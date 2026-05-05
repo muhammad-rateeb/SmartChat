@@ -6,6 +6,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
 import '../core/constants.dart';
 
@@ -126,6 +127,76 @@ class AuthService {
       rethrow;
     } catch (e) {
       throw Exception('Login failed: $e');
+    }
+  }
+
+  // ─── Google Login ──────────────────────────────────────────
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  /// Signs in a user with Google.
+  /// Creates a corresponding Firestore user document if one doesn't exist.
+  Future<UserModel> signInWithGoogle() async {
+    try {
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        throw Exception('Google Sign-In aborted by user.');
+      }
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // Create a new credential
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Once signed in, return the UserCredential
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final user = userCredential.user!;
+
+      // Ensure the Firestore user document exists.
+      await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(user.uid)
+          .set({
+            'isOnline': true,
+            'lastSeen': Timestamp.now(),
+            'email': user.email ?? googleUser.email,
+          }, SetOptions(merge: true));
+
+      // Fetch and return the user model
+      final doc = await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(user.uid)
+          .get();
+
+      if (!doc.exists || doc.data() == null) {
+        // Re-create user document if it was deleted
+        final userModel = UserModel(
+          uid: user.uid,
+          email: user.email ?? googleUser.email,
+          displayName: user.displayName ?? googleUser.displayName ?? googleUser.email.split('@').first,
+          photoURL: user.photoURL ?? googleUser.photoUrl,
+          isOnline: true,
+          lastSeen: DateTime.now(),
+          createdAt: DateTime.now(),
+        );
+        await _firestore
+            .collection(AppConstants.usersCollection)
+            .doc(user.uid)
+            .set(userModel.toMap());
+        return userModel;
+      }
+
+      return UserModel.fromMap(doc.data()!);
+    } on FirebaseAuthException {
+      rethrow;
+    } catch (e) {
+      throw Exception('Google Sign-In failed: $e');
     }
   }
 

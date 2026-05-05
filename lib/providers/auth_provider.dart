@@ -111,6 +111,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Signs in a user with Google.
+  Future<bool> signInWithGoogle() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final user = await _authService.signInWithGoogle();
+      state = state.copyWith(isLoading: false, user: user);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.message ?? 'Google Sign-In failed',
+      );
+      return false;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      return false;
+    }
+  }
+
   /// Signs out the current user.
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true);

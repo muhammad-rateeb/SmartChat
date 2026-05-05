@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../chat/chat_list_screen.dart';
 import '../ai/ai_chat_screen.dart';
 import '../profile/profile_screen.dart';
+import '../../providers/chat_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -28,6 +29,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch the chatRoomsProvider to get the total number of chats
+    final chatRoomsAsync = ref.watch(chatRoomsProvider);
+    final int chatCount = chatRoomsAsync.when(
+      data: (rooms) => rooms.length,
+      loading: () => 0,
+      error: (_, __) => 0,
+    );
+
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
@@ -37,18 +46,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _currentIndex = index;
           });
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
+            icon: Badge(
+              isLabelVisible: chatCount > 0,
+              label: Text(chatCount.toString()),
+              child: const Icon(Icons.chat_bubble_outline),
+            ),
+            selectedIcon: Badge(
+              isLabelVisible: chatCount > 0,
+              label: Text(chatCount.toString()),
+              child: const Icon(Icons.chat_bubble),
+            ),
             label: 'Chats',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.smart_toy_outlined),
             selectedIcon: Icon(Icons.smart_toy),
             label: 'AI Assistant',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
             label: 'Profile',

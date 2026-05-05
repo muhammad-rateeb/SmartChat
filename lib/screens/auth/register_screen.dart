@@ -215,6 +215,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+
+                  // Google Sign-In Button
+                  SizedBox(
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: authState.isLoading
+                          ? null
+                          : () async {
+                              final authNotifier = ref.read(authNotifierProvider.notifier);
+                              final success = await authNotifier.signInWithGoogle();
+
+                              if (!context.mounted) return;
+                              
+                              if (!success) {
+                                final error = ref.read(authNotifierProvider).errorMessage;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(error ?? 'Google Sign-In failed'),
+                                    backgroundColor: Theme.of(context).colorScheme.error,
+                                  ),
+                                );
+                              }
+                            },
+                      icon: Image.network(
+                        'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
+                        height: 24,
+                        width: 24,
+                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, size: 28),
+                      ),
+                      label: const Text('Continue with Google', style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
                   const SizedBox(height: 24),
 
                   // Login link

@@ -6,8 +6,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../models/user_model.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../core/constants.dart';
+import '../models/user_model.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -126,6 +127,72 @@ class AuthService {
       rethrow;
     } catch (e) {
       throw Exception('Login failed: $e');
+    }
+  }
+
+  // ─── Google Login ──────────────────────────────────────────
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: kIsWeb ? 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com' : null,
+  );
+
+  /// Signs in a user with Google.
+  Future<UserModel> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser == null) {
+        throw Exception('Google Sign-In aborted by user.');
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final user = userCredential.user!;
+
+      // Ensure the Firestore user document exists.
+      await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(user.uid)
+          .set({
+            'isOnline': true,
+            'lastSeen': Timestamp.now(),
+            'email': user.email ?? googleUser.email,
+          }, SetOptions(merge: true));
+
+      final doc = await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(user.uid)
+          .get();
+
+      if (!doc.exists || doc.data() == null) {
+        final userModel = UserModel(
+          uid: user.uid,
+          email: user.email ?? googleUser.email,
+          displayName: user.displayName ?? googleUser.displayName ?? googleUser.email.split('@').first,
+          photoURL: user.photoURL ?? googleUser.photoUrl,
+          isOnline: true,
+          lastSeen: DateTime.now(),
+          createdAt: DateTime.now(),
+        );
+        await _firestore
+            .collection(AppConstants.usersCollection)
+            .doc(user.uid)
+            .set(userModel.toMap());
+        return userModel;
+      }
+
+      return UserModel.fromMap(doc.data()!);
+    } on FirebaseAuthException {
+      rethrow;
+    } catch (e) {
+      debugPrint('Google Sign-In Error: $e');
+      throw Exception('Google Sign-In failed: $e');
     }
   }
 

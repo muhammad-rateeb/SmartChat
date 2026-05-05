@@ -1,0 +1,10 @@
+{
+  "name": "firebase-cleanup",
+  "private": true,
+  "version": "1.0.0",
+  "type": "commonjs",
+  "description": "Admin cleanup scripts for SmartChat Firebase (use with extreme caution).",
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}

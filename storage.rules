@@ -1,0 +1,45 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Profile Images ────────────────────────────────────────────────
+    // Match direct file under profile_images folder
+    match /profile_images/{fileName} {
+      // Anyone authenticated can view profile images
+      allow read: if request.auth != null;
+
+      // Only the owner can upload/update/delete their profile image
+      // fileName should be "{userId}.jpg"
+      allow write: if request.auth != null
+        && fileName.matches(request.auth.uid + '.*')
+        && request.resource.size < 5 * 1024 * 1024  // Max 5MB
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // ── Chat Images ──────────────────────────────────────────────────
+    match /chat_images/{chatRoomId}/{allPaths=**} {
+      // Any authenticated user can read chat images
+      allow read: if request.auth != null;
+
+      // Any authenticated user can upload chat images (max 10MB)
+      allow write: if request.auth != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // ── Chat Audio ───────────────────────────────────────────────────
+    match /chat_audio/{chatRoomId}/{allPaths=**} {
+      // Any authenticated user can read chat audio
+      allow read: if request.auth != null;
+
+      // Any authenticated user can upload chat audio (max 20MB)
+      allow write: if request.auth != null
+        && request.resource.size < 20 * 1024 * 1024;
+    }
+
+    // ── Default: deny all other paths ────────────────────────────────
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

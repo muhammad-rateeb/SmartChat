@@ -132,27 +132,32 @@ class AuthService {
 
   // ─── Google Login ──────────────────────────────────────────
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: kIsWeb ? 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com' : null,
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   /// Signs in a user with Google.
   Future<UserModel> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
-      if (googleUser == null) {
-        throw Exception('Google Sign-In aborted by user.');
+      UserCredential userCredential;
+      if (kIsWeb) {
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        userCredential = await _auth.signInWithPopup(googleProvider);
+      } else {
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        
+        if (googleUser == null) {
+          throw Exception('Google Sign-In aborted by user.');
+        }
+
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        userCredential = await _auth.signInWithCredential(credential);
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user!;
 
       // Ensure the Firestore user document exists.
@@ -162,7 +167,7 @@ class AuthService {
           .set({
             'isOnline': true,
             'lastSeen': Timestamp.now(),
-            'email': user.email ?? googleUser.email,
+            'email': user.email ?? '',
           }, SetOptions(merge: true));
 
       final doc = await _firestore
@@ -171,11 +176,13 @@ class AuthService {
           .get();
 
       if (!doc.exists || doc.data() == null) {
+        final email = user.email ?? '';
+        final displayName = user.displayName ?? (email.isNotEmpty ? email.split('@').first : 'User');
         final userModel = UserModel(
           uid: user.uid,
-          email: user.email ?? googleUser.email,
-          displayName: user.displayName ?? googleUser.displayName ?? googleUser.email.split('@').first,
-          photoURL: user.photoURL ?? googleUser.photoUrl,
+          email: email,
+          displayName: displayName,
+          photoURL: user.photoURL ?? '',
           isOnline: true,
           lastSeen: DateTime.now(),
           createdAt: DateTime.now(),

@@ -229,7 +229,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                               if (!context.mounted) return;
                               
-                              if (!success) {
+                              if (success) {
+                                context.go('/home');
+                              } else {
                                 final error = ref.read(authNotifierProvider).errorMessage;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
